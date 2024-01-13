@@ -1,7 +1,7 @@
 Language = 'Go'
 Cmd = './a.out'
 Args = []
-Reactive = true
+Reactive = false
 TesterPath = 'tools/target/release/tester'
 VisPath = 'tools/target/release/vis'
 GenPath = 'tools/target/release/gen'

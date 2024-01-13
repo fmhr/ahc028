@@ -1,4 +1,4 @@
-BINARY = main
+BINARY = a.out
 SRC = main.go
 
 .PHONY: build

@@ -9,13 +9,13 @@ InfilePath = 'tools/in/'
 OutfilePath = 'out/'
 Jobs = 4
 Cloud = false
-CompilerURL = ''
+CompilerURL = 'https://go-compiler-xgep7m6rnq-an.a.run.app/compiler'
 Source = 'main.go'
 CompileCmd = 'go build -o a.out main.go'
 Binary = 'a.out'
 tmpBinary = ''
-Bucket = ''
-WorkerURL = ''
-ConcurrentRequests = 1000
+Bucket = 'binarys'
+WorkerURL = 'https://worker-xgep7m6rnq-an.a.run.app/worker'
+ConcurrentRequests = 100
 TimeLimitMS = 10000
 

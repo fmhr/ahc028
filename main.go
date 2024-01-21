@@ -75,11 +75,13 @@ func solver() {
 	//}
 	//score(ans)
 	rtn2, _ := dpRoot(str, points)
-	score(rtn2)
+	score(rtn2, start)
 	for i := 0; i < len(rtn2); i++ {
 		fmt.Println(rtn2[i])
 	}
 }
+
+var X int
 
 func shortestSuperstring(words []string, points [26][]Point) []string {
 	initial := make([]string, len(words))
@@ -118,11 +120,12 @@ func shortestSuperstring(words []string, points [26][]Point) []string {
 							}
 						}
 						if words[i][len(words[i])-k:] == words[j][:k] {
-							_, costi := dpRoot(words[i], points)
-							_, costj := dpRoot(words[j], points)
+							_, costi := dpRootCache(words[i], points)
+							_, costj := dpRootCache(words[j], points)
 							newWord := words[i] + words[j][k:]
-							_, cost := dpRoot(newWord, points)
-							if costi+costj >= cost {
+							_, cost := dpRootCache(newWord, points)
+							if costi+costj >= cost+X {
+								log.Println(words[i], words[j], costi, costj, cost)
 								words[i] = newWord
 								words[j] = words[len(words)-1]
 								words = words[:len(words)-1]
@@ -232,12 +235,13 @@ func SARoot(word string, points [26][]Point) []int {
 }
 
 // 一番短いルートを探す
+const sizeN = 16 // N=15
 func dpRoot(word string, points [26][]Point) ([]Point, int) {
-	dp := make([][32][32]int, len(word))
-	root := make([][32][32]Point, len(word))
+	dp := make([][sizeN][sizeN]int, len(word))
+	root := make([][sizeN][sizeN]Point, len(word))
 	for i := 0; i < len(word); i++ {
-		for j := 0; j < 32; j++ {
-			for k := 0; k < 32; k++ {
+		for j := 0; j < sizeN; j++ {
+			for k := 0; k < sizeN; k++ {
 				dp[i][j][k] = math.MaxInt32
 			}
 		}
@@ -259,9 +263,9 @@ func dpRoot(word string, points [26][]Point) ([]Point, int) {
 		}
 	}
 	minCostIndex := 0
-	minCost := math.MaxInt32
+	minCost := dp[len(word)-1][points[word[len(word)-1]-'A'][0].y][points[word[len(word)-1]-'A'][0].x]
 	for i := 1; i < len(points[word[len(word)-1]-'A']); i++ {
-		if dp[len(word)-1][points[word[len(word)-1]-'A'][i].y][points[word[len(word)-1]-'A'][i].x] < dp[len(word)-1][points[word[len(word)-1]-'A'][minCostIndex].y][points[word[len(word)-1]-'A'][minCostIndex].x] {
+		if dp[len(word)-1][points[word[len(word)-1]-'A'][i].y][points[word[len(word)-1]-'A'][i].x] < minCost {
 			minCostIndex = i
 			minCost = dp[len(word)-1][points[word[len(word)-1]-'A'][i].y][points[word[len(word)-1]-'A'][i].x]
 		}
@@ -271,17 +275,37 @@ func dpRoot(word string, points [26][]Point) ([]Point, int) {
 	for i := len(word) - 2; i >= 0; i-- {
 		rootPoint[i] = root[i+1][rootPoint[i+1].y][rootPoint[i+1].x]
 	}
-
 	return rootPoint, minCost
 }
 
-func score(ans []Point) {
-	score := 10000
-	cost := 0
-	for i := 0; i < len(ans)-1; i++ {
-		cost += distance(ans[i], ans[i+1])
+type DpRootCache struct {
+	root []Point
+	cost int
+}
+
+var dpRootCacheMap map[string]DpRootCache
+
+func dpRootCache(word string, points [26][]Point) ([]Point, int) {
+	if dpRootCacheMap == nil {
+		dpRootCacheMap = make(map[string]DpRootCache)
 	}
-	log.Println("score = ", score-cost, " cost = ", cost)
+	if cache, ok := dpRootCacheMap[word]; ok {
+		log.Println("cache", word, cache.cost)
+		return cache.root, cache.cost
+	} else {
+		root, cost := dpRoot(word, points)
+		dpRootCacheMap[word] = DpRootCache{root, cost}
+		return root, cost
+	}
+}
+
+func score(ans []Point, start Point) {
+	score := 10000
+	cost := distance(start, ans[0])
+	for i := 0; i < len(ans)-1; i++ {
+		cost += distance(ans[i], ans[i+1]) + 1
+	}
+	log.Printf("score=%d cost=%d\n", score-cost, cost)
 }
 
 func rootLength(word string, root []int, points [26][]Point) int {

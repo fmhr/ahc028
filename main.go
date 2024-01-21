@@ -59,7 +59,7 @@ func solver() {
 	result := shortestSuperstring(words, points)
 	log.Printf("len=%d\n", len(result))
 	for i := 0; i < len(result); i++ {
-		log.Println(result[i])
+		//log.Println(result[i])
 	}
 	str := ""
 	for i := 0; i < len(result); i++ {
@@ -74,14 +74,14 @@ func solver() {
 	//ans[i] = points[str[i]-'A'][rtn[i]]
 	//}
 	//score(ans)
-	rtn2, _ := dpRoot(str, points)
+	rtn2, _ := dpRootCache(str, points)
 	score(rtn2, start)
 	for i := 0; i < len(rtn2); i++ {
 		fmt.Println(rtn2[i])
 	}
 }
 
-var X int
+var X int = 2
 
 func shortestSuperstring(words []string, points [26][]Point) []string {
 	initial := make([]string, len(words))
@@ -124,7 +124,7 @@ func shortestSuperstring(words []string, points [26][]Point) []string {
 							_, costj := dpRootCache(words[j], points)
 							newWord := words[i] + words[j][k:]
 							_, cost := dpRootCache(newWord, points)
-							if costi+costj >= cost+X {
+							if costi+costj+X >= cost {
 								log.Println(words[i], words[j], costi, costj, cost)
 								words[i] = newWord
 								words[j] = words[len(words)-1]
@@ -290,7 +290,6 @@ func dpRootCache(word string, points [26][]Point) ([]Point, int) {
 		dpRootCacheMap = make(map[string]DpRootCache)
 	}
 	if cache, ok := dpRootCacheMap[word]; ok {
-		log.Println("cache", word, cache.cost)
 		return cache.root, cache.cost
 	} else {
 		root, cost := dpRoot(word, points)

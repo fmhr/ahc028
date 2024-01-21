@@ -26,11 +26,12 @@ func (p Point) String() string {
 	return fmt.Sprintf("%d %d", p.y, p.x)
 }
 
+var startPoint Point
+
 func solver() {
 	var N, M int
 	fmt.Scan(&N, &M)
-	var start Point
-	fmt.Scan(&start.y, &start.x)
+	fmt.Scan(&startPoint.y, &startPoint.x)
 	keyboard := make([][]byte, N)
 	for i := 0; i < N; i++ {
 		fmt.Scan(&keyboard[i])
@@ -41,7 +42,7 @@ func solver() {
 	}
 	initial := make([]string, M)
 	copy(initial, words)
-	log.Println(N, M, start)
+	log.Println(N, M, startPoint)
 	// wordsの順番を変更して、最終的な文字列を最小にする
 	// 文字の重複によって、文字列は縮む
 	// shortest Superstring problem
@@ -58,31 +59,22 @@ func solver() {
 	}
 	result := shortestSuperstring(words, points)
 	log.Printf("len=%d\n", len(result))
-	//for i := 0; i < len(result); i++ {
-	//log.Println(result[i])
-	//}
-	result = greedyOrder(result, points, start)
-	str := ""
-	for i := 0; i < len(result); i++ {
-		str += result[i]
-		//log.Println(result[i])
+	str := greedyOrder(result, points, startPoint)
+	var cnt int
+	for i := 0; i < len(result)-1; i++ {
+		if str[i] == str[i+1] {
+			cnt++
+		}
 	}
-	log.Printf("total=%d\n", len(str))
-	//rtn := SARoot(str, points)
-	//ans := make([]Point, len(str))
-	//for i := 0; i < len(rtn); i++ {
-	//fmt.Println(points[str[i]-'A'][rtn[i]])
-	//ans[i] = points[str[i]-'A'][rtn[i]]
-	//}
-	//score(ans)
-	rtn2, _ := dpRootCache(str, points)
-	score(rtn2, start)
+	log.Println(cnt)
+	rtn2, _ := dpRoot(str, points, startPoint)
+	score(rtn2, startPoint)
 	for i := 0; i < len(rtn2); i++ {
 		fmt.Println(rtn2[i])
 	}
 }
 
-var X int = 2
+var X int = 1
 
 func shortestSuperstring(words []string, points [26][]Point) []string {
 	for {
@@ -115,7 +107,7 @@ func shortestSuperstring(words []string, points [26][]Point) []string {
 						newWord := words[i] + words[j][k:]
 						_, cost := dpRootCache(newWord, points)
 						if costi+costj+X >= cost {
-							log.Println(words[i], words[j], costi, costj, cost)
+							//log.Println(words[i], words[j], costi, costj, cost)
 							words[i] = newWord
 							words[j] = words[len(words)-1]
 							words = words[:len(words)-1]
@@ -139,65 +131,44 @@ func shortestSuperstring(words []string, points [26][]Point) []string {
 	return words
 }
 
-func greedyOrder(words []string, points [26][]Point, start Point) []string {
-	newWords := make([]string, 0, len(words))
+// greedyで順番を決める
+func greedyOrder(words []string, points [26][]Point, start Point) string {
 	size := len(words)
-	minDist := math.MaxInt32
+	minCost := math.MaxInt32
 	minWord := ""
 	minWordIndex := 0
 	for i := 0; i < len(words); i++ {
-		d := distance(start, points[words[i][0]-'A'][0])
-		if d < minDist {
-			minDist = d
+		_, cst := dpRoot(words[i], points, start)
+		_, baseCst := dpRootCache(words[i], points)
+		cst -= baseCst
+		if cst < minCost {
+			minCost = cst
 			minWordIndex = i
 			minWord = words[i]
 		}
 	}
+	rtn := minWord
 	words[size-1], words[minWordIndex] = words[minWordIndex], words[size-1]
 	words = words[:size-1]
-	size = len(words)
-	newWords = append(newWords, minWord)
-	for size > 1 {
-		minDist = math.MaxInt32
+	for len(words) > 0 {
+		minCost = math.MaxInt32
 		minWord = ""
 		minWordIndex = 0
 		for i := 0; i < len(words); i++ {
-			d := distance(points[newWords[len(newWords)-1][len(newWords[len(newWords)-1])-1]-'A'][0], points[words[i][0]-'A'][0])
-			if d < minDist {
-				minDist = d
+			_, cst := dpRootCache(rtn+words[i], points)
+			_, baseCst := dpRootCache(words[i], points)
+			cst -= baseCst
+			if cst < minCost {
+				minCost = cst
 				minWordIndex = i
 				minWord = words[i]
 			}
 		}
-		words[size-1], words[minWordIndex] = words[minWordIndex], words[size-1]
-		words = words[:size-1]
-		size = len(words)
-		newWords = append(newWords, minWord)
+		words[len(words)-1], words[minWordIndex] = words[minWordIndex], words[len(words)-1]
+		words = words[:len(words)-1]
+		rtn += minWord
 	}
-	newWords = append(newWords, words[0])
-	return newWords
-}
-
-func greedyRoot(word string, points [26][]Point) []int {
-	root := make([]int, len(word))
-	for i := 0; i < len(word); i++ {
-		root[i] = rand.Intn(len(points[word[i]-'A']))
-	}
-	best := rootLength(word, root, points)
-	for i := 0; i < 100; i++ {
-		w := rand.Intn(len(word))
-		old := root[w]
-		n := rand.Intn(len(points[word[w]-'A']))
-		root[w] = n
-		newLength := rootLength(word, root, points)
-		if newLength < best {
-			best = newLength
-		} else {
-			root[w] = old
-		}
-		//log.Println(best, newLength, root)
-	}
-	return root
+	return rtn
 }
 
 const start_temp = 5.0
@@ -251,7 +222,7 @@ func SARoot(word string, points [26][]Point) []int {
 
 // 一番短いルートを探す
 const sizeN = 16 // N=15
-func dpRoot(word string, points [26][]Point) ([]Point, int) {
+func dpRoot(word string, points [26][]Point, startP Point) ([]Point, int) {
 	dp := make([][sizeN][sizeN]int, len(word))
 	root := make([][sizeN][sizeN]Point, len(word))
 	for i := 0; i < len(word); i++ {
@@ -261,8 +232,12 @@ func dpRoot(word string, points [26][]Point) ([]Point, int) {
 			}
 		}
 	}
-	for i := 0; i < len(points[word[0]-'A']); i++ {
-		dp[0][points[word[0]-'A'][i].y][points[word[0]-'A'][i].x] = 0
+	if points[word[0]-'A'][0] == startP {
+		dp[0][startP.y][startP.x] = 0
+	} else {
+		for i := 0; i < len(points[word[0]-'A']); i++ {
+			dp[0][points[word[0]-'A'][i].y][points[word[0]-'A'][i].x] = 0
+		}
 	}
 	for l := 1; l < len(word); l++ {
 		a := word[l-1] - 'A'
@@ -307,7 +282,7 @@ func dpRootCache(word string, points [26][]Point) ([]Point, int) {
 	if cache, ok := dpRootCacheMap[word]; ok {
 		return cache.root, cache.cost
 	} else {
-		root, cost := dpRoot(word, points)
+		root, cost := dpRoot(word, points, Point{-1, -1})
 		dpRootCacheMap[word] = DpRootCache{root, cost}
 		return root, cost
 	}

@@ -67,8 +67,16 @@ func solver() {
 	}
 	log.Printf("total=%d\n", len(str))
 	rtn := SARoot(str, points)
+	ans := make([]Point, len(str))
 	for i := 0; i < len(rtn); i++ {
-		fmt.Println(points[str[i]-'A'][rtn[i]])
+		//fmt.Println(points[str[i]-'A'][rtn[i]])
+		ans[i] = points[str[i]-'A'][rtn[i]]
+	}
+	score(ans)
+	rtn2 := dpRoot(str, points)
+	score(rtn2)
+	for i := 0; i < len(rtn2); i++ {
+		fmt.Println(rtn2[i])
 	}
 }
 
@@ -215,6 +223,57 @@ func SARoot(word string, points [26][]Point) []int {
 	}
 	log.Printf("iterations=%d\n", iterations)
 	return bestSolution
+}
+
+// 一番短いルートを探す
+func dpRoot(word string, points [26][]Point) []Point {
+	dp := make([][32][32]int, len(word))
+	root := make([][32][32]Point, len(word))
+	for i := 0; i < len(word); i++ {
+		for j := 0; j < 32; j++ {
+			for k := 0; k < 32; k++ {
+				dp[i][j][k] = math.MaxInt32
+			}
+		}
+	}
+	for i := 0; i < len(points[word[0]-'A']); i++ {
+		dp[0][points[word[0]-'A'][i].y][points[word[0]-'A'][i].x] = 0
+	}
+	for l := 1; l < len(word); l++ {
+		a := word[l-1] - 'A'
+		b := word[l] - 'A'
+		for i := 0; i < len(points[a]); i++ {
+			for j := 0; j < len(points[b]); j++ {
+				cost := distance(points[a][i], points[b][j])
+				if dp[l-1][points[a][i].y][points[a][i].x]+cost < dp[l][points[b][j].y][points[b][j].x] {
+					dp[l][points[b][j].y][points[b][j].x] = dp[l-1][points[a][i].y][points[a][i].x] + cost
+					root[l][points[b][j].y][points[b][j].x] = points[a][i]
+				}
+			}
+		}
+	}
+	minCostIndex := 0
+	for i := 1; i < len(points[word[len(word)-1]-'A']); i++ {
+		if dp[len(word)-1][points[word[len(word)-1]-'A'][i].y][points[word[len(word)-1]-'A'][i].x] < dp[len(word)-1][points[word[len(word)-1]-'A'][minCostIndex].y][points[word[len(word)-1]-'A'][minCostIndex].x] {
+			minCostIndex = i
+		}
+	}
+	rootPoint := make([]Point, len(word))
+	rootPoint[len(word)-1] = points[word[len(word)-1]-'A'][minCostIndex]
+	for i := len(word) - 2; i >= 0; i-- {
+		rootPoint[i] = root[i+1][rootPoint[i+1].y][rootPoint[i+1].x]
+	}
+
+	return rootPoint
+}
+
+func score(ans []Point) {
+	score := 10000
+	cost := 0
+	for i := 0; i < len(ans)-1; i++ {
+		cost += distance(ans[i], ans[i+1])
+	}
+	log.Println("score = ", score-cost, " cost = ", cost)
 }
 
 func rootLength(word string, root []int, points [26][]Point) int {

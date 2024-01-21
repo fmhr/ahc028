@@ -215,10 +215,10 @@ func generateNodes(n *Node, points [26][]Point, words []string) []*Node {
 		_, baseCst := dpRootCache(words[i], points)
 		cst -= baseCst
 		var str string
-		if len(n.str) > 1 && n.str[len(n.str)-1] != words[i][0] {
-			str = n.str + words[i]
-		} else {
+		if len(n.str) > 1 && n.str[len(n.str)-1] == words[i][0] {
 			str = n.str + words[i][1:]
+		} else {
+			str = n.str + words[i]
 		}
 		node := newNode(n.used, str, n.cost+cst)
 		node.used[i] = true

@@ -58,9 +58,10 @@ func solver() {
 	}
 	result := shortestSuperstring(words, points)
 	log.Printf("len=%d\n", len(result))
-	for i := 0; i < len(result); i++ {
-		//log.Println(result[i])
-	}
+	//for i := 0; i < len(result); i++ {
+	//log.Println(result[i])
+	//}
+	result = greedyOrder(result, points, start)
 	str := ""
 	for i := 0; i < len(result); i++ {
 		str += result[i]
@@ -161,6 +162,45 @@ func cntStringsLen(words []string) int {
 		length += len(words[i])
 	}
 	return length
+}
+
+func greedyOrder(words []string, points [26][]Point, start Point) []string {
+	newWords := make([]string, 0, len(words))
+	size := len(words)
+	minDist := math.MaxInt32
+	minWord := ""
+	minWordIndex := 0
+	for i := 0; i < len(words); i++ {
+		d := distance(start, points[words[i][0]-'A'][0])
+		if d < minDist {
+			minDist = d
+			minWordIndex = i
+			minWord = words[i]
+		}
+	}
+	words[size-1], words[minWordIndex] = words[minWordIndex], words[size-1]
+	words = words[:size-1]
+	size = len(words)
+	newWords = append(newWords, minWord)
+	for size > 1 {
+		minDist = math.MaxInt32
+		minWord = ""
+		minWordIndex = 0
+		for i := 0; i < len(words); i++ {
+			d := distance(points[newWords[len(newWords)-1][len(newWords[len(newWords)-1])-1]-'A'][0], points[words[i][0]-'A'][0])
+			if d < minDist {
+				minDist = d
+				minWordIndex = i
+				minWord = words[i]
+			}
+		}
+		words[size-1], words[minWordIndex] = words[minWordIndex], words[size-1]
+		words = words[:size-1]
+		size = len(words)
+		newWords = append(newWords, minWord)
+	}
+	newWords = append(newWords, words[0])
+	return newWords
 }
 
 func greedyRoot(word string, points [26][]Point) []int {

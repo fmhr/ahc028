@@ -46,7 +46,6 @@ func solver() {
 	// 文字の重複によって、文字列は縮む
 	// shortest Superstring problem
 	// 前後の文字列と繋がっていない文字は順番を変更できるので、キーボードの位置を考慮して、順番を変える
-	result := shortestSuperstring(words)
 	var points [26][]Point
 	for i := 0; i < 26; i++ {
 		for j := 0; j < N; j++ {
@@ -57,30 +56,32 @@ func solver() {
 			}
 		}
 	}
+	result := shortestSuperstring(words, points)
 	log.Printf("len=%d\n", len(result))
-	//log.Println(minRoot(result[0], points))
-	//greedyRoot(result[0], points)
+	for i := 0; i < len(result); i++ {
+		log.Println(result[i])
+	}
 	str := ""
 	for i := 0; i < len(result); i++ {
 		str += result[i]
 		//log.Println(result[i])
 	}
 	log.Printf("total=%d\n", len(str))
-	rtn := SARoot(str, points)
-	ans := make([]Point, len(str))
-	for i := 0; i < len(rtn); i++ {
-		//fmt.Println(points[str[i]-'A'][rtn[i]])
-		ans[i] = points[str[i]-'A'][rtn[i]]
-	}
-	score(ans)
-	rtn2 := dpRoot(str, points)
+	//rtn := SARoot(str, points)
+	//ans := make([]Point, len(str))
+	//for i := 0; i < len(rtn); i++ {
+	//fmt.Println(points[str[i]-'A'][rtn[i]])
+	//ans[i] = points[str[i]-'A'][rtn[i]]
+	//}
+	//score(ans)
+	rtn2, _ := dpRoot(str, points)
 	score(rtn2)
 	for i := 0; i < len(rtn2); i++ {
 		fmt.Println(rtn2[i])
 	}
 }
 
-func shortestSuperstring(words []string) []string {
+func shortestSuperstring(words []string, points [26][]Point) []string {
 	initial := make([]string, len(words))
 	copy(initial, words)
 	best := make([]string, len(words))
@@ -117,12 +118,17 @@ func shortestSuperstring(words []string) []string {
 							}
 						}
 						if words[i][len(words[i])-k:] == words[j][:k] {
+							_, costi := dpRoot(words[i], points)
+							_, costj := dpRoot(words[j], points)
 							newWord := words[i] + words[j][k:]
-							words[i] = newWord
-							words[j] = words[len(words)-1]
-							words = words[:len(words)-1]
-							restart = true
-							break
+							_, cost := dpRoot(newWord, points)
+							if costi+costj >= cost {
+								words[i] = newWord
+								words[j] = words[len(words)-1]
+								words = words[:len(words)-1]
+								restart = true
+								break
+							}
 						}
 					}
 					if restart {
@@ -226,7 +232,7 @@ func SARoot(word string, points [26][]Point) []int {
 }
 
 // 一番短いルートを探す
-func dpRoot(word string, points [26][]Point) []Point {
+func dpRoot(word string, points [26][]Point) ([]Point, int) {
 	dp := make([][32][32]int, len(word))
 	root := make([][32][32]Point, len(word))
 	for i := 0; i < len(word); i++ {
@@ -253,9 +259,11 @@ func dpRoot(word string, points [26][]Point) []Point {
 		}
 	}
 	minCostIndex := 0
+	minCost := math.MaxInt32
 	for i := 1; i < len(points[word[len(word)-1]-'A']); i++ {
 		if dp[len(word)-1][points[word[len(word)-1]-'A'][i].y][points[word[len(word)-1]-'A'][i].x] < dp[len(word)-1][points[word[len(word)-1]-'A'][minCostIndex].y][points[word[len(word)-1]-'A'][minCostIndex].x] {
 			minCostIndex = i
+			minCost = dp[len(word)-1][points[word[len(word)-1]-'A'][i].y][points[word[len(word)-1]-'A'][i].x]
 		}
 	}
 	rootPoint := make([]Point, len(word))
@@ -264,7 +272,7 @@ func dpRoot(word string, points [26][]Point) []Point {
 		rootPoint[i] = root[i+1][rootPoint[i+1].y][rootPoint[i+1].x]
 	}
 
-	return rootPoint
+	return rootPoint, minCost
 }
 
 func score(ans []Point) {

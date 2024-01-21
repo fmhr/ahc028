@@ -85,83 +85,58 @@ func solver() {
 var X int = 2
 
 func shortestSuperstring(words []string, points [26][]Point) []string {
-	initial := make([]string, len(words))
-	copy(initial, words)
-	best := make([]string, len(words))
-	copy(best, words)
-	bestStrLen := cntStringsLen(best)
-	for z := 0; z < 5; z++ {
-		words := make([]string, len(initial))
-		copy(words, initial)
-		rand.Shuffle(len(words), func(i, j int) {
-			words[i], words[j] = words[j], words[i]
-		})
-		for {
-			var restart bool
-			// k > 0 か k > 1　で考える
-			for k := 4; k > 0; k-- {
-				for i := 0; i < len(words); i++ {
-					for j := 0; j < len(words); j++ {
-						if i == j {
-							continue
+	for {
+		var restart bool
+		// k > 0 か k > 1　で考える
+		for k := 4; k > 0; k-- {
+			for i := 0; i < len(words); i++ {
+				for j := 0; j < len(words); j++ {
+					if i == j {
+						continue
+					}
+					if len(words[i]) > len(words[j]) {
+						if strings.Contains(words[i], words[j]) {
+							words[j] = words[len(words)-1]
+							words = words[:len(words)-1]
+							restart = true
+							break
 						}
-						if len(words[i]) > len(words[j]) {
-							if strings.Contains(words[i], words[j]) {
-								words[j] = words[len(words)-1]
-								words = words[:len(words)-1]
-								restart = true
-								break
-							}
-						} else if len(words[i]) < len(words[j]) {
-							if strings.Contains(words[j], words[i]) {
-								words[i] = words[len(words)-1]
-								words = words[:len(words)-1]
-								restart = true
-								break
-							}
-						}
-						if words[i][len(words[i])-k:] == words[j][:k] {
-							_, costi := dpRootCache(words[i], points)
-							_, costj := dpRootCache(words[j], points)
-							newWord := words[i] + words[j][k:]
-							_, cost := dpRootCache(newWord, points)
-							if costi+costj+X >= cost {
-								log.Println(words[i], words[j], costi, costj, cost)
-								words[i] = newWord
-								words[j] = words[len(words)-1]
-								words = words[:len(words)-1]
-								restart = true
-								break
-							}
+					} else if len(words[i]) < len(words[j]) {
+						if strings.Contains(words[j], words[i]) {
+							words[i] = words[len(words)-1]
+							words = words[:len(words)-1]
+							restart = true
+							break
 						}
 					}
-					if restart {
-						break
+					if words[i][len(words[i])-k:] == words[j][:k] {
+						_, costi := dpRootCache(words[i], points)
+						_, costj := dpRootCache(words[j], points)
+						newWord := words[i] + words[j][k:]
+						_, cost := dpRootCache(newWord, points)
+						if costi+costj+X >= cost {
+							log.Println(words[i], words[j], costi, costj, cost)
+							words[i] = newWord
+							words[j] = words[len(words)-1]
+							words = words[:len(words)-1]
+							restart = true
+							break
+						}
 					}
 				}
 				if restart {
 					break
 				}
 			}
-			if !restart {
+			if restart {
 				break
 			}
 		}
-		if cntStringsLen(words) < bestStrLen {
-			bestStrLen = cntStringsLen(words)
-			best = make([]string, len(words))
-			copy(best, words)
+		if !restart {
+			break
 		}
 	}
-	return best
-}
-
-func cntStringsLen(words []string) int {
-	length := 0
-	for i := 0; i < len(words); i++ {
-		length += len(words[i])
-	}
-	return length
+	return words
 }
 
 func greedyOrder(words []string, points [26][]Point, start Point) []string {

@@ -17,5 +17,5 @@ tmpBinary = ''
 Bucket = 'binarys'
 WorkerURL = 'https://worker-xgep7m6rnq-an.a.run.app/worker'
 ConcurrentRequests = 100
-TimeLimitMS = 10000
+TimeLimitMS = 3000000
 

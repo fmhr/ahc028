@@ -214,7 +214,13 @@ func generateNodes(n *Node, points [26][]Point, words []string) []*Node {
 		_, cst := dpRootCache(n.str+words[i], points)
 		_, baseCst := dpRootCache(words[i], points)
 		cst -= baseCst
-		node := newNode(n.used, n.str+words[i], n.cost+cst)
+		var str string
+		if len(n.str) > 1 && n.str[len(n.str)-1] != words[i][0] {
+			str = n.str + words[i]
+		} else {
+			str = n.str + words[i][1:]
+		}
+		node := newNode(n.used, str, n.cost+cst)
 		node.used[i] = true
 		nodes = append(nodes, node)
 	}
@@ -227,7 +233,6 @@ func beamSearchOrder(words []string, points [26][]Point, start Point) string {
 	nodes := []*Node{initialNode}
 	nodesSub := make([]*Node, 0, beamWidth)
 	for len(nodes) > 0 {
-		log.Println(len(nodes))
 		sort.Slice(nodes, func(i, j int) bool {
 			return nodes[i].cost < nodes[j].cost
 		})
@@ -250,6 +255,7 @@ func beamSearchOrder(words []string, points [26][]Point, start Point) string {
 	for i := 0; i < len(nodes); i++ {
 		_, cst := dpRoot(nodes[i].str, points, start)
 		nodes[i].cost = cst
+		log.Println(cst)
 	}
 	sort.Slice(nodes, func(i, j int) bool {
 		return nodes[i].cost < nodes[j].cost

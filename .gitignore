@@ -20,6 +20,7 @@ main
 vis.html
 vis.png
 seed.txt
+cpuprof
 
 # File extensions to ignore
 *.svg

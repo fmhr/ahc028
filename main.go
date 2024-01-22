@@ -93,15 +93,6 @@ func solver() {
 	//str := greedyOrder(result, points, startPoint)
 	str := beamSearchOrder(result, points, startPoint)
 	log.Println(time.Since(t1).Seconds(), "ms")
-	var cnt int
-	for i := 0; i < len(result)-1; i++ {
-		log.Println(i, string(str[i]))
-		if str[i] == str[i+1] {
-			cnt++
-		}
-	}
-	log.Println(str)
-	log.Println(cnt)
 	rtn2, _ := dpRoot(str, points, startPoint)
 	score(rtn2, startPoint)
 	for i := 0; i < len(rtn2); i++ {

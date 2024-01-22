@@ -10,7 +10,6 @@ import (
 	"os"
 	"runtime/pprof"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 )
@@ -72,7 +71,6 @@ func read(r io.Reader) {
 
 func solver() {
 	read(os.Stdin)
-	log.Println(N, M, startPoint)
 	// wordsの順番を変更して、最終的な文字列を最小にする
 	// 文字の重複によって、文字列は縮む
 	// shortest Superstring problem
@@ -88,11 +86,9 @@ func solver() {
 		}
 	}
 	result := shortestSuperstring(words, points)
-	log.Printf("len=%d\n", len(result))
-	t1 := time.Now()
+	//log.Printf("len=%d\n", len(result))
 	//str := greedyOrder(result, points, startPoint)
 	str := beamSearchOrder(result, points, startPoint)
-	log.Println(time.Since(t1).Seconds(), "ms")
 	rtn2, _ := dpRoot(str, points, startPoint)
 	score(rtn2, startPoint)
 	for i := 0; i < len(rtn2); i++ {
@@ -111,21 +107,6 @@ func shortestSuperstring(words []string, points [26][]Point) []string {
 				for j := 0; j < len(words); j++ {
 					if i == j {
 						continue
-					}
-					if len(words[i]) > len(words[j]) {
-						if strings.Contains(words[i], words[j]) {
-							words[j] = words[len(words)-1]
-							words = words[:len(words)-1]
-							restart = true
-							break
-						}
-					} else if len(words[i]) < len(words[j]) {
-						if strings.Contains(words[j], words[i]) {
-							words[i] = words[len(words)-1]
-							words = words[:len(words)-1]
-							restart = true
-							break
-						}
 					}
 					if words[i][len(words[i])-k:] == words[j][:k] {
 						_, costi := dpRootCache(words[i], points)
@@ -274,7 +255,6 @@ func beamSearchOrder(words []string, points [26][]Point, start Point) string {
 	for i := 0; i < len(nodes); i++ {
 		_, cst := dpRoot(nodes[i].str, points, start)
 		nodes[i].cost = cst
-		log.Println(cst)
 	}
 	sort.Slice(nodes, func(i, j int) bool {
 		return nodes[i].cost < nodes[j].cost

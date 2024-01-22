@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"math/rand"
@@ -51,23 +52,26 @@ func (p Point) String() string {
 	return fmt.Sprintf("%d %d", p.y, p.x)
 }
 
+var N, M int
 var startPoint Point
 var keyboard [][]byte
+var words []string
 
-func solver() {
-	var N, M int
-	fmt.Scan(&N, &M)
-	fmt.Scan(&startPoint.y, &startPoint.x)
+func read(r io.Reader) {
+	fmt.Fscan(r, &N, &M)
+	fmt.Fscan(r, &startPoint.y, &startPoint.x)
 	keyboard = make([][]byte, N)
 	for i := 0; i < N; i++ {
-		fmt.Scan(&keyboard[i])
+		fmt.Fscan(r, &keyboard[i])
 	}
-	words := make([]string, M)
+	words = make([]string, M)
 	for i := 0; i < M; i++ {
-		fmt.Scan(&words[i])
+		fmt.Fscan(r, &words[i])
 	}
-	initial := make([]string, M)
-	copy(initial, words)
+}
+
+func solver() {
+	read(os.Stdin)
 	log.Println(N, M, startPoint)
 	// wordsの順番を変更して、最終的な文字列を最小にする
 	// 文字の重複によって、文字列は縮む
@@ -91,10 +95,12 @@ func solver() {
 	log.Println(time.Since(t1).Seconds(), "ms")
 	var cnt int
 	for i := 0; i < len(result)-1; i++ {
+		log.Println(i, string(str[i]))
 		if str[i] == str[i+1] {
 			cnt++
 		}
 	}
+	log.Println(str)
 	log.Println(cnt)
 	rtn2, _ := dpRoot(str, points, startPoint)
 	score(rtn2, startPoint)
@@ -230,7 +236,7 @@ func newNode(used [200]bool, str string, cost int) *Node {
 }
 
 func generateNodes(n *Node, points [26][]Point, words []string) []*Node {
-	nodes := make([]*Node, 0, 200)
+	nodes := make([]*Node, 0, 20)
 	for i := 0; i < len(words); i++ {
 		if n.used[i] {
 			continue

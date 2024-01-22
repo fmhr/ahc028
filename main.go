@@ -10,6 +10,7 @@ import (
 	"os"
 	"runtime/pprof"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -202,13 +203,17 @@ func generateNodes(n Node, points [26][]Point, words []string) []Node {
 		_, cst := dpRootCache(n.str+words[i], points)
 		_, baseCst := dpRootCache(words[i], points)
 		cst -= baseCst
-		var str string
+		var str strings.Builder
 		if len(n.str) > 1 && n.str[len(n.str)-1] == words[i][0] {
-			str = n.str + words[i][1:]
+			str.Grow(len(n.str) + len(words[i]) - 1)
+			str.WriteString(n.str)
+			str.WriteString(words[i][1:])
 		} else {
-			str = n.str + words[i]
+			str.Grow(len(n.str) + len(words[i]))
+			str.WriteString(n.str)
+			str.WriteString(words[i])
 		}
-		node := Node{n.used, str, n.cost + cst}
+		node := Node{n.used, str.String(), n.cost + cst}
 		node.used[i] = true
 		nodes = append(nodes, node)
 	}

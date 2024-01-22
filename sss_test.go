@@ -62,6 +62,7 @@ func BenchmarkBeamSearch(b *testing.B) {
 			}
 		}
 	}
+	b.ResetTimer()
 	str := beamSearchOrder(words, points, startPoint)
-	log.Println(str)
+	_ = str
 }

@@ -193,8 +193,8 @@ func goalCheck(n *Node, m int) bool {
 	return true
 }
 
-func generateNodes(n *Node, points [26][]Point, words []string) []*Node {
-	nodes := make([]*Node, 0, 20)
+func generateNodes(n Node, points [26][]Point, words []string) []Node {
+	nodes := make([]Node, 0, 200)
 	for i := 0; i < len(words); i++ {
 		if n.used[i] {
 			continue
@@ -210,7 +210,7 @@ func generateNodes(n *Node, points [26][]Point, words []string) []*Node {
 		}
 		node := Node{n.used, str, n.cost + cst}
 		node.used[i] = true
-		nodes = append(nodes, &node)
+		nodes = append(nodes, node)
 	}
 	return nodes
 }
@@ -227,9 +227,9 @@ func beamSearchOrder(words []string, points [26][]Point, start Point) string {
 		})
 		nodesSub = nodesSub[:0]
 		for i := 0; i < min(beamWidth, len(nodes)); i++ {
-			nextNodes := generateNodes(&nodes[i], points, words)
+			nextNodes := generateNodes(nodes[i], points, words)
 			for j := 0; j < len(nextNodes); j++ {
-				nodesSub = append(nodesSub, *nextNodes[j])
+				nodesSub = append(nodesSub, nextNodes[j])
 			}
 		}
 		nodes = make([]Node, len(nodesSub))

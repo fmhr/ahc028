@@ -10,7 +10,6 @@ import (
 	"os"
 	"runtime/pprof"
 	"sort"
-	"sync"
 	"time"
 )
 
@@ -185,12 +184,6 @@ type Node struct {
 	cost int
 }
 
-var nodePool = sync.Pool{
-	New: func() interface{} {
-		return &Node{}
-	},
-}
-
 func goalCheck(n *Node, m int) bool {
 	for i := 0; i < m; i++ {
 		if !n.used[i] {
@@ -198,14 +191,6 @@ func goalCheck(n *Node, m int) bool {
 		}
 	}
 	return true
-}
-
-func newNode(used [200]bool, str string, cost int) *Node {
-	n := nodePool.Get().(*Node)
-	n.used = used
-	n.str = str
-	n.cost = cost
-	return n
 }
 
 func generateNodes(n *Node, points [26][]Point, words []string) []*Node {
@@ -223,18 +208,18 @@ func generateNodes(n *Node, points [26][]Point, words []string) []*Node {
 		} else {
 			str = n.str + words[i]
 		}
-		node := newNode(n.used, str, n.cost+cst)
+		node := Node{n.used, str, n.cost + cst}
 		node.used[i] = true
-		nodes = append(nodes, node)
+		nodes = append(nodes, &node)
 	}
 	return nodes
 }
 
 func beamSearchOrder(words []string, points [26][]Point, start Point) string {
 	beamWidth := 1
-	initialNode := newNode([200]bool{}, "", 0)
+	initialNode := Node{[200]bool{}, "", 0}
 	nodes := make([]Node, 0, 200)
-	nodes = append(nodes, *initialNode)
+	nodes = append(nodes, initialNode)
 	nodesSub := make([]Node, 0, 200)
 	for len(nodes) > 0 {
 		sort.Slice(nodes, func(i, j int) bool {

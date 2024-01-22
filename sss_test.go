@@ -42,7 +42,7 @@ func BenchmarkDpRoot(b *testing.B) {
 			}
 		}
 	}
-	result, n := dpRoot("ACDGEATPHEPP", points, Point{-1, -1})
+	result, n := dpRoot("ACDGEATPHEPP", points, Point{-1, -1}, false)
 	//log.Println(n)
 	//log.Println(result)
 	_, _ = result, n

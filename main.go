@@ -90,7 +90,7 @@ func solver() {
 	//log.Printf("len=%d\n", len(result))
 	//str := greedyOrder(result, points, startPoint)
 	str := beamSearchOrder(result, points, startPoint)
-	rtn2, _ := dpRoot(str, points, startPoint)
+	rtn2, _ := dpRoot(str, points, startPoint, true)
 	score(rtn2, startPoint)
 	for i := 0; i < len(rtn2); i++ {
 		fmt.Println(rtn2[i])
@@ -110,10 +110,10 @@ func shortestSuperstring(words []string, points [26][]Point) []string {
 						continue
 					}
 					if words[i][len(words[i])-k:] == words[j][:k] {
-						_, costi := dpRootCache(words[i], points)
-						_, costj := dpRootCache(words[j], points)
+						_, costi := dpRootCache(words[i], points, false)
+						_, costj := dpRootCache(words[j], points, false)
 						newWord := words[i] + words[j][k:]
-						_, cost := dpRootCache(newWord, points)
+						_, cost := dpRootCache(newWord, points, false)
 						if costi+costj+X >= cost {
 							//log.Println(words[i], words[j], costi, costj, cost)
 							words[i] = newWord
@@ -200,8 +200,8 @@ func generateNodes(n Node, points [26][]Point, words []string) []Node {
 		if n.used[i] {
 			continue
 		}
-		_, cst := dpRootCache(n.str+words[i], points)
-		_, baseCst := dpRootCache(words[i], points)
+		_, cst := dpRootCache(n.str+words[i], points, false)
+		_, baseCst := dpRootCache(words[i], points, false)
 		cst -= baseCst
 		var str strings.Builder
 		if len(n.str) > 1 && n.str[len(n.str)-1] == words[i][0] {
@@ -244,7 +244,7 @@ func beamSearchOrder(words []string, points [26][]Point, start Point) string {
 		}
 	}
 	for i := 0; i < len(nodes); i++ {
-		_, cst := dpRoot(nodes[i].str, points, start)
+		_, cst := dpRoot(nodes[i].str, points, start, false)
 		nodes[i].cost = cst
 	}
 	sort.Slice(nodes, func(i, j int) bool {
@@ -307,7 +307,7 @@ const sizeN = 16 // N=15
 var dp [1000][sizeN][sizeN]int
 var root [1000][sizeN][sizeN]Point
 
-func dpRoot(word string, points [26][]Point, startP Point) ([]Point, int) {
+func dpRoot(word string, points [26][]Point, startP Point, needRoot bool) ([]Point, int) {
 	for i := 0; i < len(word); i++ {
 		for j := 0; j < sizeN; j++ {
 			for k := 0; k < sizeN; k++ {
@@ -343,6 +343,9 @@ func dpRoot(word string, points [26][]Point, startP Point) ([]Point, int) {
 			minCost = dp[len(word)-1][points[word[len(word)-1]-'A'][i].y][points[word[len(word)-1]-'A'][i].x]
 		}
 	}
+	if !needRoot {
+		return nil, minCost
+	}
 	rootPoint := make([]Point, len(word))
 	rootPoint[len(word)-1] = points[word[len(word)-1]-'A'][minCostIndex]
 	for i := len(word) - 2; i >= 0; i-- {
@@ -358,14 +361,14 @@ type DpRootCache struct {
 
 var dpRootCacheMap map[string]DpRootCache
 
-func dpRootCache(word string, points [26][]Point) ([]Point, int) {
+func dpRootCache(word string, points [26][]Point, needRoot bool) ([]Point, int) {
 	if dpRootCacheMap == nil {
 		dpRootCacheMap = make(map[string]DpRootCache)
 	}
 	if cache, ok := dpRootCacheMap[word]; ok {
 		return cache.root, cache.cost
 	} else {
-		root, cost := dpRoot(word, points, Point{-1, -1})
+		root, cost := dpRoot(word, points, Point{-1, -1}, needRoot)
 		dpRootCacheMap[word] = DpRootCache{root, cost}
 		return root, cost
 	}

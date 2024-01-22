@@ -1,18 +1,21 @@
 package main
 
 import (
+	"log"
 	"os"
 	"testing"
 )
 
-func BenchmarkSSS(b *testing.B) {
+func readSample() {
 	file, err := os.Open("tools/in/0000.txt")
 	if err != nil {
-		b.Error(err)
+		log.Fatal(err)
 	}
 	defer file.Close()
 	read(file)
+}
 
+func BenchmarkSSS(b *testing.B) {
 	var points [26][]Point
 	for i := 0; i < 26; i++ {
 		for j := 0; j < N; j++ {
@@ -25,8 +28,40 @@ func BenchmarkSSS(b *testing.B) {
 	}
 	result := shortestSuperstring(words, points)
 	_ = result
-	//	str := beamSearchOrder(result, points, startPoint)
-	//
-	// _ = str
-	// log.Println(str)
+}
+
+func BenchmarkDpRoot(b *testing.B) {
+	readSample()
+	var points [26][]Point
+	for i := 0; i < 26; i++ {
+		for j := 0; j < N; j++ {
+			for k := 0; k < N; k++ {
+				if keyboard[j][k] == byte('A'+i) {
+					points[i] = append(points[i], Point{j, k})
+				}
+			}
+		}
+	}
+	result, n := dpRoot("ACDGEATPHEPP", points, Point{-1, -1})
+	//log.Println(n)
+	//log.Println(result)
+	_, _ = result, n
+}
+
+// go test -bench BeamSearch -cpuprofile cpu.out -benchmem
+// go tool pprof -http=":8080" cpu.out
+func BenchmarkBeamSearch(b *testing.B) {
+	readSample()
+	var points [26][]Point
+	for i := 0; i < 26; i++ {
+		for j := 0; j < N; j++ {
+			for k := 0; k < N; k++ {
+				if keyboard[j][k] == byte('A'+i) {
+					points[i] = append(points[i], Point{j, k})
+				}
+			}
+		}
+	}
+	str := beamSearchOrder(words, points, startPoint)
+	log.Println(str)
 }

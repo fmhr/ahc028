@@ -304,9 +304,10 @@ func SARoot(word string, points [26][]Point) []int {
 
 // 一番短いルートを探す
 const sizeN = 16 // N=15
+var dp [1000][sizeN][sizeN]int
+var root [1000][sizeN][sizeN]Point
+
 func dpRoot(word string, points [26][]Point, startP Point) ([]Point, int) {
-	dp := make([][sizeN][sizeN]int, len(word))
-	root := make([][sizeN][sizeN]Point, len(word))
 	for i := 0; i < len(word); i++ {
 		for j := 0; j < sizeN; j++ {
 			for k := 0; k < sizeN; k++ {

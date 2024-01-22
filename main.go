@@ -1,10 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"math"
 	"math/rand"
+	"os"
+	"runtime/pprof"
 	"sort"
 	"strings"
 	"sync"
@@ -13,8 +16,28 @@ import (
 
 var start time.Time
 
+// ./bin/main -cpuprofile cpuprof < tools/in/0000.txt
+// go tool pprof -http=localhost:8888 bin/main cpuprof
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
 func main() {
 	log.SetFlags(log.Lshortfile)
+	///////////////////////////////
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+	/////////////////////////////////////
+
 	start = time.Now()
 	solver()
 	log.Printf("time=%f\n", time.Since(start).Seconds())
@@ -62,9 +85,10 @@ func solver() {
 	}
 	result := shortestSuperstring(words, points)
 	log.Printf("len=%d\n", len(result))
+	t1 := time.Now()
 	//str := greedyOrder(result, points, startPoint)
 	str := beamSearchOrder(result, points, startPoint)
-	log.Println(str)
+	log.Println(time.Since(t1).Seconds(), "ms")
 	var cnt int
 	for i := 0; i < len(result)-1; i++ {
 		if str[i] == str[i+1] {
@@ -230,25 +254,23 @@ func generateNodes(n *Node, points [26][]Point, words []string) []*Node {
 func beamSearchOrder(words []string, points [26][]Point, start Point) string {
 	beamWidth := 1
 	initialNode := newNode([200]bool{}, "", 0)
-	nodes := []*Node{initialNode}
-	nodesSub := make([]*Node, 0, beamWidth)
+	nodes := make([]Node, 0, 200)
+	nodes = append(nodes, *initialNode)
+	nodesSub := make([]Node, 0, 200)
 	for len(nodes) > 0 {
 		sort.Slice(nodes, func(i, j int) bool {
 			return nodes[i].cost < nodes[j].cost
 		})
 		nodesSub = nodesSub[:0]
 		for i := 0; i < min(beamWidth, len(nodes)); i++ {
-			nextNodes := generateNodes(nodes[i], points, words)
+			nextNodes := generateNodes(&nodes[i], points, words)
 			for j := 0; j < len(nextNodes); j++ {
-				nodesSub = append(nodesSub, nextNodes[j])
+				nodesSub = append(nodesSub, *nextNodes[j])
 			}
 		}
-		for i := 0; i < len(nodes); i++ {
-			nodePool.Put(nodes[i])
-		}
-		nodes = make([]*Node, len(nodesSub))
+		nodes = make([]Node, len(nodesSub))
 		copy(nodes, nodesSub)
-		if goalCheck(nodes[0], len(words)) {
+		if goalCheck(&nodes[0], len(words)) {
 			break
 		}
 	}

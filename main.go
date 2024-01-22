@@ -19,7 +19,8 @@ var start time.Time
 // ./bin/main -cpuprofile cpuprof < tools/in/0000.txt
 // go tool pprof -http=localhost:8888 bin/main cpuprof
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
-var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
+//var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 
 func main() {
 	log.SetFlags(log.Lshortfile)
@@ -139,44 +140,44 @@ func shortestSuperstring(words []string, points [26][]Point) []string {
 }
 
 // greedyで順番を決める
-func greedyOrder(words []string, points [26][]Point, start Point) string {
-	size := len(words)
-	minCost := math.MaxInt32
-	minWord := ""
-	minWordIndex := 0
-	for i := 0; i < len(words); i++ {
-		_, cst := dpRoot(words[i], points, start)
-		_, baseCst := dpRootCache(words[i], points)
-		cst -= baseCst
-		if cst < minCost {
-			minCost = cst
-			minWordIndex = i
-			minWord = words[i]
-		}
-	}
-	rtn := minWord
-	words[size-1], words[minWordIndex] = words[minWordIndex], words[size-1]
-	words = words[:size-1]
-	for len(words) > 0 {
-		minCost = math.MaxInt32
-		minWord = ""
-		minWordIndex = 0
-		for i := 0; i < len(words); i++ {
-			_, cst := dpRootCache(rtn+words[i], points)
-			_, baseCst := dpRootCache(words[i], points)
-			cst -= baseCst
-			if cst < minCost {
-				minCost = cst
-				minWordIndex = i
-				minWord = words[i]
-			}
-		}
-		words[len(words)-1], words[minWordIndex] = words[minWordIndex], words[len(words)-1]
-		words = words[:len(words)-1]
-		rtn += minWord
-	}
-	return rtn
-}
+//func greedyOrder(words []string, points [26][]Point, start Point) string {
+//size := len(words)
+//minCost := math.MaxInt32
+//minWord := ""
+//minWordIndex := 0
+//for i := 0; i < len(words); i++ {
+//_, cst := dpRoot(words[i], points, start)
+//_, baseCst := dpRootCache(words[i], points)
+//cst -= baseCst
+//if cst < minCost {
+//minCost = cst
+//minWordIndex = i
+//minWord = words[i]
+//}
+//}
+//rtn := minWord
+//words[size-1], words[minWordIndex] = words[minWordIndex], words[size-1]
+//words = words[:size-1]
+//for len(words) > 0 {
+//minCost = math.MaxInt32
+//minWord = ""
+//minWordIndex = 0
+//for i := 0; i < len(words); i++ {
+//_, cst := dpRootCache(rtn+words[i], points)
+//_, baseCst := dpRootCache(words[i], points)
+//cst -= baseCst
+//if cst < minCost {
+//minCost = cst
+//minWordIndex = i
+//minWord = words[i]
+//}
+//}
+//words[len(words)-1], words[minWordIndex] = words[minWordIndex], words[len(words)-1]
+//words = words[:len(words)-1]
+//rtn += minWord
+//}
+//return rtn
+//}
 
 type Node struct {
 	used [200]bool

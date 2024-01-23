@@ -16,17 +16,7 @@ func readSample() {
 }
 
 func BenchmarkSSS(b *testing.B) {
-	var points [26][]Point
-	for i := 0; i < 26; i++ {
-		for j := 0; j < N; j++ {
-			for k := 0; k < N; k++ {
-				if keyboard[j][k] == byte('A'+i) {
-					points[i] = append(points[i], Point{j, k})
-				}
-			}
-		}
-	}
-	result := shortestSuperstring(words, points)
+	result := shortestSuperstring(words)
 	_ = result
 }
 
@@ -42,7 +32,7 @@ func BenchmarkDpRoot(b *testing.B) {
 			}
 		}
 	}
-	result, n := dpRoot("ACDGEATPHEPP", points, Point{-1, -1}, false)
+	result, n := dpRoot("ACDGEATPHEPP", Point{-1, -1}, true)
 	//log.Println(n)
 	//log.Println(result)
 	_, _ = result, n
@@ -63,6 +53,6 @@ func BenchmarkBeamSearch(b *testing.B) {
 		}
 	}
 	b.ResetTimer()
-	str := beamSearchOrder(words, points, startPoint)
+	str := beamSearchOrder(words, startPoint)
 	_ = str
 }

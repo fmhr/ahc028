@@ -55,7 +55,7 @@ func (p Point) String() string {
 var N, M int
 var startPoint Point
 var keyboard [][]byte
-var words []string
+var Words []string
 var points [26][]Point
 
 func read(r io.Reader) {
@@ -65,9 +65,9 @@ func read(r io.Reader) {
 	for i := 0; i < N; i++ {
 		fmt.Fscan(r, &keyboard[i])
 	}
-	words = make([]string, M)
+	Words = make([]string, M)
 	for i := 0; i < M; i++ {
-		fmt.Fscan(r, &words[i])
+		fmt.Fscan(r, &Words[i])
 	}
 	for i := 0; i < 26; i++ {
 		for j := 0; j < N; j++ {
@@ -80,46 +80,69 @@ func read(r io.Reader) {
 	}
 }
 
+func resetGlobal() {
+	dp = [1000][N_][N_]int{}
+	root = [1000][N_][N_]Point{}
+}
+
 func solver() {
 	read(os.Stdin)
 	// wordsの順番を変更して、最終的な文字列を最小にする
 	// 文字の重複によって、文字列は縮む
 	// shortest Superstring problem
 	// 前後の文字列と繋がっていない文字は順番を変更できるので、キーボードの位置を考慮して、順番を変える
-	result := shortestSuperstring(words)
 	//log.Printf("len=%d\n", len(result))
 	//str := greedyOrder(result, points, startPoint)
-	str := beamSearchOrder(result, startPoint)
-	rtn2, _ := dpRoot(str, startPoint, true)
-	for i := 0; i < len(rtn2); i++ {
-		fmt.Println(rtn2[i])
+	bestRoot := []Point{}
+	bestScore := 0
+	for i := 0; i < 5; i++ {
+		if time.Since(start).Seconds() > 1.6 {
+			break
+		}
+		result := shortestSuperstring(Words)
+		//log.Println(result)
+		str := beamSearchOrder(result, startPoint)
+		rtn2, _ := dpRoot(str, startPoint, true)
+		if score(rtn2) > bestScore {
+			bestScore = score(rtn2)
+			bestRoot = rtn2
+		}
+		rand.Shuffle(len(Words), func(i, j int) {
+			Words[i], Words[j] = Words[j], Words[i]
+		})
+		resetGlobal()
+		log.Println(i, bestScore)
 	}
-	s := score(rtn2)
-	log.Printf("score=%d\n", s)
+	for i := 0; i < len(bestRoot); i++ {
+		fmt.Println(bestRoot[i])
+	}
+	log.Printf("score=%d\n", bestScore)
 }
 
 var X int = 1
 
 func shortestSuperstring(words []string) []string {
+	w := make([]string, len(words))
+	copy(w, words)
 	for {
 		var restart bool
 		// k > 0 か k > 1　で考える
 		for k := 4; k > 0; k-- {
-			for i := 0; i < len(words); i++ {
-				for j := 0; j < len(words); j++ {
+			for i := 0; i < len(w); i++ {
+				for j := 0; j < len(w); j++ {
 					if i == j {
 						continue
 					}
-					if words[i][len(words[i])-k:] == words[j][:k] {
-						_, costi := dpRootCache(words[i], false)
-						_, costj := dpRootCache(words[j], false)
-						newWord := words[i] + words[j][k:]
+					if w[i][len(w[i])-k:] == w[j][:k] {
+						_, costi := dpRootCache(w[i], false)
+						_, costj := dpRootCache(w[j], false)
+						newWord := w[i] + w[j][k:]
 						_, cost := dpRootCache(newWord, false)
 						if costi+costj+X >= cost {
 							//log.Println(words[i], words[j], costi, costj, cost)
-							words[i] = newWord
-							words[j] = words[len(words)-1]
-							words = words[:len(words)-1]
+							w[i] = newWord
+							w[j] = w[len(w)-1]
+							w = w[:len(w)-1]
 							restart = true
 							break
 						}
@@ -137,7 +160,7 @@ func shortestSuperstring(words []string) []string {
 			break
 		}
 	}
-	return words
+	return w
 }
 
 // greedyで順番を決める
@@ -203,9 +226,9 @@ func goalCheck(n *Node, m int) bool {
 
 func baseCostSum(n Node) int {
 	sum := 0
-	for i := 0; i < len(words); i++ {
+	for i := 0; i < len(Words); i++ {
 		if !n.used[i] {
-			_, cst := dpRootCache(words[i], false)
+			_, cst := dpRootCache(Words[i], false)
 			sum += cst
 		}
 	}
@@ -260,13 +283,12 @@ func beamSearchOrder(words []string, start Point) string {
 		if goalCheck(&nodes[0], len(words)) {
 			break
 		}
-		log.Println(len(nodes))
 		nodesSub = nodesSub[:0]
 	}
 	sort.Slice(nodes, func(i, j int) bool {
 		return nodes[i].trueScore() > nodes[j].trueScore()
 	})
-	log.Println(len(nodes))
+	//log.Println(len(nodes))
 	return nodes[0].str
 }
 

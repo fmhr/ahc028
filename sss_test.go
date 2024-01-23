@@ -16,7 +16,7 @@ func readSample() {
 }
 
 func BenchmarkSSS(b *testing.B) {
-	result := shortestSuperstring(words)
+	result := shortestSuperstring(Words)
 	_ = result
 }
 
@@ -43,6 +43,6 @@ func BenchmarkBeamSearch(b *testing.B) {
 		}
 	}
 	b.ResetTimer()
-	str := beamSearchOrder(words, startPoint)
+	str := beamSearchOrder(Words, startPoint)
 	_ = str
 }

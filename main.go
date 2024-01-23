@@ -91,10 +91,11 @@ func solver() {
 	//str := greedyOrder(result, points, startPoint)
 	str := beamSearchOrder(result, startPoint)
 	rtn2, _ := dpRoot(str, startPoint, true)
-	score(rtn2, startPoint)
 	for i := 0; i < len(rtn2); i++ {
 		fmt.Println(rtn2[i])
 	}
+	s := score(rtn2)
+	log.Printf("score=%d\n", s)
 }
 
 var X int = 1
@@ -180,9 +181,15 @@ func shortestSuperstring(words []string) []string {
 //}
 
 type Node struct {
-	used [200]bool
-	str  string
-	cost int
+	used        [200]bool
+	str         string
+	cost        int
+	baseCostSum int
+}
+
+func (n Node) trueScore() int {
+	root, _ := dpRoot(n.str, startPoint, true)
+	return score(root)
 }
 
 func goalCheck(n *Node, m int) bool {
@@ -192,6 +199,17 @@ func goalCheck(n *Node, m int) bool {
 		}
 	}
 	return true
+}
+
+func baseCostSum(n Node) int {
+	sum := 0
+	for i := 0; i < len(words); i++ {
+		if !n.used[i] {
+			_, cst := dpRootCache(words[i], false)
+			sum += cst
+		}
+	}
+	return sum
 }
 
 func generateNodes(n Node, words []string) []Node {
@@ -211,7 +229,7 @@ func generateNodes(n Node, words []string) []Node {
 		} else {
 			str.WriteString(words[i])
 		}
-		node := Node{n.used, str.String(), n.cost + cst}
+		node := Node{n.used, str.String(), n.cost + cst, n.baseCostSum - baseCst}
 		node.used[i] = true
 		nodes = append(nodes, node)
 	}
@@ -220,32 +238,35 @@ func generateNodes(n Node, words []string) []Node {
 
 func beamSearchOrder(words []string, start Point) string {
 	beamWidth := 1
-	initialNode := Node{[200]bool{}, "", 0}
+	initialNode := Node{[200]bool{}, "", 0, 0}
+	initialNode.baseCostSum = baseCostSum(initialNode)
 	nodes := make([]Node, 0, 200)
 	nodes = append(nodes, initialNode)
 	nodesSub := make([]Node, 0, 200)
-	for len(nodes) > 0 {
+	loop := len(words)
+	for i := 0; i < loop; i++ {
 		sort.Slice(nodes, func(i, j int) bool {
 			return nodes[i].cost < nodes[j].cost
 		})
-		nodesSub = nodesSub[:0]
+		//if i > loop-5 {
+		//beamWidth = len(nodes)
+		//}
 		for i := 0; i < min(beamWidth, len(nodes)); i++ {
-			nextNodes := generateNodes(nodes[i], words)
-			nodesSub = append(nodesSub, nextNodes...)
+			n := generateNodes(nodes[i], words)
+			nodesSub = append(nodesSub, n...)
 		}
 		nodes = make([]Node, len(nodesSub))
 		copy(nodes, nodesSub)
 		if goalCheck(&nodes[0], len(words)) {
 			break
 		}
-	}
-	for i := 0; i < len(nodes); i++ {
-		_, cst := dpRoot(nodes[i].str, start, false)
-		nodes[i].cost = cst
+		log.Println(len(nodes))
+		nodesSub = nodesSub[:0]
 	}
 	sort.Slice(nodes, func(i, j int) bool {
-		return nodes[i].cost < nodes[j].cost
+		return nodes[i].trueScore() > nodes[j].trueScore()
 	})
+	log.Println(len(nodes))
 	return nodes[0].str
 }
 
@@ -367,13 +388,14 @@ func dpRootCache(word string, needRoot bool) ([]Point, int) {
 	}
 }
 
-func score(ans []Point, start Point) {
+func score(ans []Point) int {
 	score := 10000
-	cost := distance(start, ans[0]) + 1
+	cost := distance(startPoint, ans[0]) + 1
 	for i := 0; i < len(ans)-1; i++ {
 		cost += distance(ans[i], ans[i+1]) + 1
 	}
-	log.Printf("score=%d cost=%d\n", score-cost, cost)
+	//log.Printf("score=%d cost=%d\n", score-cost, cost)
+	return score - cost
 }
 
 func rootLength(word string, root []int, points [26][]Point) int {

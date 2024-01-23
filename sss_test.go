@@ -22,17 +22,7 @@ func BenchmarkSSS(b *testing.B) {
 
 func BenchmarkDpRoot(b *testing.B) {
 	readSample()
-	var points [26][]Point
-	for i := 0; i < 26; i++ {
-		for j := 0; j < N; j++ {
-			for k := 0; k < N; k++ {
-				if keyboard[j][k] == byte('A'+i) {
-					points[i] = append(points[i], Point{j, k})
-				}
-			}
-		}
-	}
-	result, n := dpRoot("ACDGEATPHEPP", Point{-1, -1}, true)
+	result, n := dpRoot("ACDGEGAWEPVATPHEPP", Point{-1, -1}, true)
 	//log.Println(n)
 	//log.Println(result)
 	_, _ = result, n

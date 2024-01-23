@@ -299,14 +299,14 @@ func SARoot(word string) []int {
 }
 
 // 一番短いルートを探す
-const sizeN = 16 // N=15
-var dp [1000][sizeN][sizeN]int
-var root [1000][sizeN][sizeN]Point
+const N_ = 16 // N=15
+var dp [1000][N_][N_]int
+var root [1000][N_][N_]Point
 
 func dpRoot(word string, startP Point, needRoot bool) ([]Point, int) {
 	for i := 0; i < len(word); i++ {
-		for j := 0; j < sizeN; j++ {
-			for k := 0; k < sizeN; k++ {
+		for j := 0; j < N_; j++ {
+			for k := 0; k < N_; k++ {
 				dp[i][j][k] = math.MaxInt32
 			}
 		}
@@ -319,15 +319,15 @@ func dpRoot(word string, startP Point, needRoot bool) ([]Point, int) {
 		}
 	}
 	for l := 1; l < len(word); l++ {
-		a := word[l-1] - 'A'
-		b := word[l] - 'A'
-		for i := 0; i < len(points[a]); i++ {
-			for j := 0; j < len(points[b]); j++ {
-				cost := dp[l-1][points[a][i].y][points[a][i].x] + distance(points[a][i], points[b][j])
-				if cost < dp[l][points[b][j].y][points[b][j].x] {
-					dp[l][points[b][j].y][points[b][j].x] = cost
+		a := points[word[l-1]-'A']
+		b := points[word[l]-'A']
+		for i := 0; i < len(a); i++ {
+			for j := 0; j < len(b); j++ {
+				cost := dp[l-1][a[i].y][a[i].x] + distance(a[i], b[j])
+				if cost < dp[l][b[j].y][b[j].x] {
+					dp[l][b[j].y][b[j].x] = cost
 					if needRoot {
-						root[l][points[b][j].y][points[b][j].x] = points[a][i]
+						root[l][b[j].y][b[j].x] = a[i]
 					}
 				}
 			}

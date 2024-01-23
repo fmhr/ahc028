@@ -352,22 +352,17 @@ func dpRoot(word string, startP Point, needRoot bool) ([]Point, int) {
 	return rootPoint, minCost
 }
 
-type DpRootCache struct {
-	root []Point
-	cost int
-}
-
-var dpRootCacheMap map[string]DpRootCache
+var dpRootCacheMap map[string]int
 
 func dpRootCache(word string, needRoot bool) ([]Point, int) {
 	if dpRootCacheMap == nil {
-		dpRootCacheMap = make(map[string]DpRootCache)
+		dpRootCacheMap = make(map[string]int)
 	}
 	if cache, ok := dpRootCacheMap[word]; ok {
-		return cache.root, cache.cost
+		return nil, cache
 	} else {
 		root, cost := dpRoot(word, Point{-1, -1}, needRoot)
-		dpRootCacheMap[word] = DpRootCache{root, cost}
+		dpRootCacheMap[word] = cost
 		return root, cost
 	}
 }

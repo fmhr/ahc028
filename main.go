@@ -195,7 +195,7 @@ func goalCheck(n *Node, m int) bool {
 }
 
 func generateNodes(n Node, points [26][]Point, words []string) []Node {
-	nodes := make([]Node, 0, 200)
+	nodes := make([]Node, 0, len(words))
 	for i := 0; i < len(words); i++ {
 		if n.used[i] {
 			continue
@@ -204,13 +204,11 @@ func generateNodes(n Node, points [26][]Point, words []string) []Node {
 		_, baseCst := dpRootCache(words[i], points, false)
 		cst -= baseCst
 		var str strings.Builder
+		str.Grow(len(n.str) + len(words[i]))
+		str.WriteString(n.str)
 		if len(n.str) > 1 && n.str[len(n.str)-1] == words[i][0] {
-			str.Grow(len(n.str) + len(words[i]) - 1)
-			str.WriteString(n.str)
 			str.WriteString(words[i][1:])
 		} else {
-			str.Grow(len(n.str) + len(words[i]))
-			str.WriteString(n.str)
 			str.WriteString(words[i])
 		}
 		node := Node{n.used, str.String(), n.cost + cst}
@@ -233,9 +231,7 @@ func beamSearchOrder(words []string, points [26][]Point, start Point) string {
 		nodesSub = nodesSub[:0]
 		for i := 0; i < min(beamWidth, len(nodes)); i++ {
 			nextNodes := generateNodes(nodes[i], points, words)
-			for j := 0; j < len(nextNodes); j++ {
-				nodesSub = append(nodesSub, nextNodes[j])
-			}
+			nodesSub = append(nodesSub, nextNodes...)
 		}
 		nodes = make([]Node, len(nodesSub))
 		copy(nodes, nodesSub)
@@ -327,10 +323,12 @@ func dpRoot(word string, points [26][]Point, startP Point, needRoot bool) ([]Poi
 		b := word[l] - 'A'
 		for i := 0; i < len(points[a]); i++ {
 			for j := 0; j < len(points[b]); j++ {
-				cost := distance(points[a][i], points[b][j])
-				if dp[l-1][points[a][i].y][points[a][i].x]+cost < dp[l][points[b][j].y][points[b][j].x] {
-					dp[l][points[b][j].y][points[b][j].x] = dp[l-1][points[a][i].y][points[a][i].x] + cost
-					root[l][points[b][j].y][points[b][j].x] = points[a][i]
+				cost := dp[l-1][points[a][i].y][points[a][i].x] + distance(points[a][i], points[b][j])
+				if cost < dp[l][points[b][j].y][points[b][j].x] {
+					dp[l][points[b][j].y][points[b][j].x] = cost
+					if needRoot {
+						root[l][points[b][j].y][points[b][j].x] = points[a][i]
+					}
 				}
 			}
 		}

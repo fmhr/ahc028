@@ -52,20 +52,25 @@ func (p Point) String() string {
 	return fmt.Sprintf("%d %d", p.y, p.x)
 }
 
-var N, M int
+const N int = 15
+const M int = 200
+
 var startPoint Point
-var keyboard [][]byte
-var Words []string
+var keyboard [N][N]byte
+var Words [M]string
 var points [26][]Point
 
 func read(r io.Reader) {
-	fmt.Fscan(r, &N, &M)
+	var n, m int
+	fmt.Fscan(r, &n, &m)
 	fmt.Fscan(r, &startPoint.y, &startPoint.x)
-	keyboard = make([][]byte, N)
 	for i := 0; i < N; i++ {
-		fmt.Fscan(r, &keyboard[i])
+		var keys string
+		fmt.Fscan(r, &keys)
+		for j := 0; j < N; j++ {
+			keyboard[i][j] = keys[j]
+		}
 	}
-	Words = make([]string, M)
 	for i := 0; i < M; i++ {
 		fmt.Fscan(r, &Words[i])
 	}
@@ -99,7 +104,7 @@ func solver() {
 		if time.Since(start).Seconds() > 1.6 {
 			break
 		}
-		result := shortestSuperstring(Words)
+		result := shortestSuperstring(Words[:])
 		//log.Println(result)
 		str := beamSearchOrder(result, startPoint)
 		rtn2, _ := dpRoot(str, startPoint, true)
@@ -271,9 +276,6 @@ func beamSearchOrder(words []string, start Point) string {
 		sort.Slice(nodes, func(i, j int) bool {
 			return nodes[i].cost < nodes[j].cost
 		})
-		//if i > loop-5 {
-		//beamWidth = len(nodes)
-		//}
 		for i := 0; i < min(beamWidth, len(nodes)); i++ {
 			n := generateNodes(nodes[i], words)
 			nodesSub = append(nodesSub, n...)
